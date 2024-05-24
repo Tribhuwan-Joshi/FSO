@@ -47,7 +47,7 @@ const Statistics = ({ reviews }) => {
 
 const StatisticLine = ({ text, value }) => (
   <tr>
-    <td>{text}</td>
+    {text}
     <td>{value}</td>
   </tr>
 );
