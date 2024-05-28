@@ -5,11 +5,17 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const addPerson = (event) => {
     event.preventDefault();
-    const newPerson = {
-      name: newName,
-    };
-    setPersons(persons.concat(newPerson));
-    setNewName("");
+    const isDuplicate = persons.some((p) => p.name == newName);
+    if (isDuplicate) {
+      alert(`${newName} already exist in phonebook`);
+    } else {
+      const newPerson = {
+        name: newName,
+      };
+
+      setPersons(persons.concat(newPerson));
+      setNewName("");
+    }
   };
 
   const handleChange = (event) => setNewName(event.target.value);
