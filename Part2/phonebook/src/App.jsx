@@ -1,19 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddPerson from "./components/AddPerson";
 import Filter from "./components/Filter";
-
+import axios from "axios";
 const checkDuplicate = (persons, newPerson) => {
   return persons.some((p) => p.name == newPerson.name);
 };
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: "Arto Hellas", number: "123-45-67", id: "1" },
-  ]);
+  const [persons, setPersons] = useState([]);
 
   const [newName, setNewName] = useState("");
   const [newNumber, setNumber] = useState("");
   const [filterPerson, setFilterPerson] = useState("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/persons")
+      .then((res) => setPersons(res.data));
+  });
 
   // set filter
   const handleFilterChange = (event) => setFilterPerson(event.target.value);
