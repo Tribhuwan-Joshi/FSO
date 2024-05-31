@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AddPerson from "./components/AddPerson";
 import Filter from "./components/Filter";
 import axios from "axios";
+import contacts from "./services/contacts";
 const checkDuplicate = (persons, newPerson) => {
   return persons.some((p) => p.name == newPerson.name);
 };
@@ -35,13 +36,19 @@ const App = () => {
     if (isDuplicate) {
       alert(`${newName} already exist in phonebook`);
     } else {
-      setPersons(persons.concat(newPerson));
+      contacts
+        .getContacts()
+        .then((persons) => setPersons(persons.concat(persons)))
+        .catch((err) => console.log(err.message));
       setNewName("");
       setNumber("");
     }
   };
 
   const handleNumberChange = (event) => setNumber(event.target.value);
+
+  const deletePerson = (id) =>
+    contacts.deletePerson(id).catch(() => console.log("unable to delete"));
 
   const handleChange = (event) => setNewName(event.target.value);
 
@@ -66,17 +73,24 @@ const App = () => {
         handleNumberChange={handleNumberChange}
       />
       <h2>Numbers</h2>
-      <PhoneBook personsLists={personsLists} />
+      <PhoneBook deletePerson={deletePerson} personsLists={personsLists} />
     </div>
   );
 };
 
-const PhoneBook = ({ personsLists }) =>
-  personsLists.map((p) => <PersonInfo key={p.id} person={p} />);
+const PhoneBook = ({ personsLists, deletePerson }) =>
+  personsLists.map((p) => (
+    <PersonInfo
+      key={p.id}
+      handleDeleteContact={() => deletePerson(p.id)}
+      person={p}
+    />
+  ));
 
-const PersonInfo = ({ person }) => (
+const PersonInfo = ({ person, handleDeleteContact }) => (
   <div>
-    {person.name} - {person.number}
+    {person.name} - {person.number}{" "}
+    <button onClick={handleDeleteContact}>Delete</button>
   </div>
 );
 export default App;
