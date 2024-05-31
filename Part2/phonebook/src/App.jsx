@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AddPerson from "./components/AddPerson";
 import Filter from "./components/Filter";
-import axios from "axios";
+
 import contacts from "./services/contacts";
 const checkDuplicate = (persons, newPerson) => {
   return persons.some((p) => p.name == newPerson.name);
@@ -15,10 +15,8 @@ const App = () => {
   const [filterPerson, setFilterPerson] = useState("");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then((res) => setPersons(res.data));
-  });
+    contacts.getContacts().then((contacts) => setPersons(contacts));
+  }, []);
 
   // set filter
   const handleFilterChange = (event) => setFilterPerson(event.target.value);
@@ -28,17 +26,29 @@ const App = () => {
     const newPerson = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1,
     };
 
     const isDuplicate = checkDuplicate(persons, newPerson);
-    console.log(isDuplicate, "for ", persons, newPerson);
+
     if (isDuplicate) {
-      alert(`${newName} already exist in phonebook`);
+      if (
+        window.confirm(
+          `${newName} already exist in phonebook,replace the old number with new one?`
+        )
+      ) {
+        const person = persons.find((p) => p.name == newName);
+        contacts
+          .updateContact(person.id, newPerson)
+          .then((res) =>
+            setPersons(persons.map((p) => (p.name != res.name ? p : res)))
+          );
+        setNewName("");
+        setNumber("");
+      }
     } else {
       contacts
-        .getContacts()
-        .then((persons) => setPersons(persons.concat(persons)))
+        .createContact(newPerson)
+        .then((res) => setPersons(persons.concat(res)))
         .catch((err) => console.log(err.message));
       setNewName("");
       setNumber("");
@@ -47,8 +57,16 @@ const App = () => {
 
   const handleNumberChange = (event) => setNumber(event.target.value);
 
-  const deletePerson = (id) =>
-    contacts.deletePerson(id).catch(() => console.log("unable to delete"));
+  const deletePerson = (id) => {
+    const person = persons.find((p) => p.id == id);
+
+    if (window.confirm(`Delete ${person.name}?`)) {
+      contacts
+        .deletePerson(id)
+        .then((res) => setPersons(persons.filter((p) => p.id != res.id)))
+        .catch(() => console.log("Unable to delete this person"));
+    }
+  };
 
   const handleChange = (event) => setNewName(event.target.value);
 
@@ -89,7 +107,8 @@ const PhoneBook = ({ personsLists, deletePerson }) =>
 
 const PersonInfo = ({ person, handleDeleteContact }) => (
   <div>
-    {person.name} - {person.number}{" "}
+    {" "}
+    {person.name} - {person.number}
     <button onClick={handleDeleteContact}>Delete</button>
   </div>
 );
