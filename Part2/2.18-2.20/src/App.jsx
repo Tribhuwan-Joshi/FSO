@@ -6,6 +6,7 @@ const App = () => {
   const [country, setCountry] = useState("");
   const [countries, setCountries] = useState([]);
   const [weatherData, setWeatherData] = useState({});
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (country)
@@ -15,16 +16,25 @@ const App = () => {
           setCountries(
             res.filter((r) => r.name.common.toLowerCase().startsWith(country))
           )
-        );
+        )
+        .catch((err) => {
+          setError(err.message);
+          setTimeout(() => setError(""), 5000);
+        });
     else setCountries([]);
   }, [country]);
 
   useEffect(() => {
     if (countries.length == 1) {
-      utils.getWeather(countries[0].name.common).then((res) => {
-        console.log(res);
-        setWeatherData(res);
-      });
+      utils
+        .getWeather(countries[0].name.common)
+        .then((res) => {
+          setWeatherData(res);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setTimeout(() => setError(""), 5000);
+        });
     }
   }, [countries]);
 
@@ -38,6 +48,18 @@ const App = () => {
   };
   return (
     <>
+      {error && (
+        <div
+          style={{
+            color: "red",
+            padding: 10,
+            border: "2px solid red",
+            backgroundColor: "lightgray",
+          }}
+        >
+          {error}
+        </div>
+      )}
       <label htmlFor="country">Find Country</label>
       <input id="country" value={country} onChange={countryChange} />
       <div>
