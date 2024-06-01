@@ -4,6 +4,9 @@ import Filter from "./components/Filter";
 
 import contacts from "./services/contacts";
 import PhoneBook from "./components/Phonebook";
+import Notification from "./components/Notification";
+import Error from "./components/Error";
+
 const checkDuplicate = (persons, newPerson) => {
   return persons.some((p) => p.name == newPerson.name);
 };
@@ -14,6 +17,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNumber] = useState("");
   const [filterPerson, setFilterPerson] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     contacts.getContacts().then((contacts) => setPersons(contacts));
@@ -38,19 +43,28 @@ const App = () => {
         )
       ) {
         const person = persons.find((p) => p.name == newName);
-        contacts
-          .updateContact(person.id, newPerson)
-          .then((res) =>
-            setPersons(persons.map((p) => (p.name != res.name ? p : res)))
-          );
+        contacts.updateContact(person.id, newPerson).then((res) => {
+          setPersons(persons.map((p) => (p.name != res.name ? p : res)));
+          setMessage(`Update Details for ${person.name}`);
+          setTimeout(() => setMessage(""), 5000);
+        });
+
         setNewName("");
         setNumber("");
       }
     } else {
       contacts
         .createContact(newPerson)
-        .then((res) => setPersons(persons.concat(res)))
-        .catch((err) => console.log(err.message));
+        .then((res) => {
+          setPersons(persons.concat(res));
+          setMessage(`${res.name} added to contact list`);
+          setTimeout(() => setMessage(""), 5000);
+        })
+        .catch((err) => {
+          setError("Error! Unable to create Contact " + newPerson.name);
+          setTimeout(() => setError(""), 5000);
+        });
+
       setNewName("");
       setNumber("");
     }
@@ -64,8 +78,15 @@ const App = () => {
     if (window.confirm(`Delete ${person.name}?`)) {
       contacts
         .deletePerson(id)
-        .then((res) => setPersons(persons.filter((p) => p.id != res.id)))
-        .catch(() => console.log("Unable to delete this person"));
+        .then((res) => {
+          setPersons(persons.filter((p) => p.id != res.id));
+          return res;
+        })
+        .catch((err) => {
+          setError(`${person.name} is already deleted`);
+          setTimeout(() => setError(""), 5000);
+          setPersons((p) => p.filter((p) => p.id != person.id));
+        });
     }
   };
 
@@ -80,6 +101,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} />
+      <Error error={error} />
       <Filter
         filterPerson={filterPerson}
         handleFilterChange={handleFilterChange}
