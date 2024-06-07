@@ -1,17 +1,17 @@
 import axios from "axios";
-const baseUrl = "http://localhost:3001/persons";
+const baseUrl = "/api";
 
 const getContacts = () => {
-  return axios.get(baseUrl).then((res) => {
+  return axios.get(`${baseUrl}/persons`).then((res) => {
     return res.data;
   });
 };
 
 const createContact = (newPerson) => {
-  return axios.post(baseUrl, newPerson).then((res) => res.data);
+  return axios.post(`${baseUrl}/persons`, newPerson).then((res) => res.data);
 };
 const deletePerson = (id) => {
-  return axios.delete(`${baseUrl}/${id}`).then((res) => res.data);
+  return axios.delete(`${baseUrl}/info/${id}`).then((res) => res.data);
 };
 
 const updateContact = (id, newPerson) => {
