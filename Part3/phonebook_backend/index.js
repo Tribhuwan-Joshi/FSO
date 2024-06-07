@@ -1,19 +1,21 @@
 const express = require("express");
+const cors = require("cors");
 let persons = require("./persons");
 const morgan = require("morgan");
-
 morgan.token("payload", (req, res) => {
   if (req.method == "POST") return JSON.stringify(req.body);
   return "";
 });
 
 const app = express();
+app.use(express.static("dist"));
 app.use(express.json()); // json-parser
 app.use(
   morgan(
     ":method :url :status :res[content-length] - :response-time ms :payload"
   )
 );
+app.use(cors());
 
 app.get("/api/persons", (req, res) => {
   res.status(200).json(persons);
