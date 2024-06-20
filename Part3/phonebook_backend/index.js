@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-let persons = require("./persons");
 const morgan = require("morgan");
+const Contact = require("./models/contact");
+
 morgan.token("payload", (req, res) => {
   if (req.method == "POST") return JSON.stringify(req.body);
   return "";
@@ -18,28 +19,40 @@ app.use(
 app.use(cors());
 
 app.get("/api/persons", (req, res) => {
-  res.status(200).json(persons);
+  Contact.find({})
+    .then((data) => res.json(data))
+    .catch((err) => res.status(500).send({ error: "Error occured" }));
 });
 
 app.get("/api/info", (req, res) => {
-  const info = `Phonebook has info for ${persons.length} people`;
-  const date = new Date();
-  res.status(200).send(`<p>${info}<p><p>${date}</p>`);
+  Contact.countDocuments()
+    .then((len) => {
+      const info = `Phonebook has info for ${len} people`;
+      const date = new Date();
+      res.status(200).send(`<p>${info}<p><p>${date}</p>`);
+    })
+    .catch((err) => res.status(500));
 });
 
-app.get("/api/info/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((p) => p.id == id);
-  if (!person) res.status(404).json({ error: "Person not found" });
-  res.json(person);
+app.get("/api/info/:id", async (req, res, next) => {
+  try {
+    const person = await Contact.findById(req.params.id);
+    if (person) {
+      res.json(person);
+    } else {
+      res.status(404).send({ error: "Contact not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.delete("/api/info/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((p) => p.id == id);
-  if (!person) return res.status(404).json({ error: "Person not found" });
-  persons = persons.filter((p) => p.id != id);
-  res.json(person);
+  Contact.findByIdAndDelete(req.params.id)
+    .then((doc) => {
+      res.status(204).end();
+    })
+    .catch((err) => next(err));
 });
 
 app.post("/api/persons", (req, res) => {
@@ -48,17 +61,35 @@ app.post("/api/persons", (req, res) => {
   if (!body.name) return res.status(400).json({ error: "name is missing" });
   if (!body.number) return res.status(400).json({ error: "number is missing" });
 
-  const alreadyExist = persons.find((p) => p.name == body.name);
-  if (alreadyExist)
-    return res.status(409).json({ error: "Name already exist" });
-  const person = {
-    id: Math.floor(Math.random() * 34000 - 12000) + 12000,
+  const contact = new Contact({
+    name: body.name,
+    number: body.number,
+  });
+
+  contact
+    .save()
+    .then((doc) => res.json(doc))
+    .catch((err) => next(err));
+});
+
+app.put("/api/info/:id", (req, res) => {
+  const body = req.body;
+
+  const contact = {
     name: body.name,
     number: body.number,
   };
-  persons = persons.concat(person);
-  res.status(201).send(person);
+
+  Contact.findByIdAndUpdate(req.params.id, contact, { new: true })
+    .then((doc) => res.json(doc))
+    .catch((err) => next(err));
 });
+
+const unknownPoint = (req, res, next) => {
+  res.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownPoint);
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`Server starteted at ${PORT}`));

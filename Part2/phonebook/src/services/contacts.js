@@ -15,7 +15,7 @@ const deletePerson = (id) => {
 };
 
 const updateContact = (id, newPerson) => {
-  return axios.put(`${baseUrl}/${id}`, newPerson).then((res) => res.data);
+  return axios.put(`${baseUrl}/info/${id}`, newPerson).then((res) => res.data);
 };
 
 export default { updateContact, getContacts, deletePerson, createContact };

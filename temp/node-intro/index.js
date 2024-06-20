@@ -15,51 +15,69 @@ app.get("/api/notes", (req, res) => {
     .catch((err) => console.log(err.message));
 });
 
-app.get("/api/notes/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const note = notes.find((n) => n.id === id);
-  if (note) res.json(note);
-  else res.status(404).end("Note not found");
+app.get("/api/notes/:id", (req, res, next) => {
+  Note.findById(req.params.id)
+    .then((note) => {
+      if (note) res.json(note);
+      else res.status(404).end();
+    })
+    .catch((err) => next(err));
 });
-
-const generateId = () => {
-  const maxId =
-    notes.length > 0
-      ? Math.max.apply(
-          null,
-          notes.map((n) => n.id)
-        )
-      : 0;
-
-  const noteId = maxId + 1;
-  return noteId;
-};
 
 app.post("/api/notes", (req, res) => {
   const body = req.body;
-  if (!body) {
+
+  if (body.content == undefined) {
     return res.status(400).json({ error: "Content is missing" });
   }
 
-  const note = {
+  const note = new Note({
     content: body.content,
     important: Boolean(body.important) || false,
-    id: generateId(),
+  });
+
+  note.save().then((savedNote) => {
+    res.json(savedNote);
+  });
+});
+
+app.delete("/api/notes/:id", (req, res, next) => {
+  Note.findByIdAndDelete(req.params.id)
+    .then((result) => {
+      console.log("deleted ", result);
+      res.status(204).end();
+    })
+    .catch((err) => next(err));
+});
+
+app.put("/api/notes/:id", (request, response, next) => {
+  const body = request.body;
+
+  const note = {
+    content: body.content,
+    important: body.important,
   };
 
-  notes = notes.concat(note);
-  res.json(note);
+  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then((updatedNote) => {
+      response.json(updatedNote);
+    })
+    .catch((error) => next(error));
 });
+const unknownEndpoint = (req, res) =>
+  res.status(404).send({ error: "unknown endpoint" });
 
-app.delete("/api/notes/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const note = notes.find((n) => n.id === id);
-  if (note) {
-    notes = notes.filter((n) => n.id != id);
-    res.status(204).end();
-  }
-  res.status(404).end();
-});
+app.use(unknownEndpoint);
+
+// error middleware
+const errorHandler = (err, req, res, next) => {
+  console.error(err);
+  if (err.name == "CastError")
+    return res.status(400).send({ error: "malformatted id" });
+  next(err);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
