@@ -50,7 +50,7 @@ app.get("/api/info/:id", async (req, res, next) => {
 app.delete("/api/info/:id", (req, res) => {
   Contact.findByIdAndDelete(req.params.id)
     .then((doc) => {
-      res.status(204).end();
+      res.status(200).json(doc);
     })
     .catch((err) => next(err));
 });
