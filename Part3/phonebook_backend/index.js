@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const Contact = require("./models/contact");
 
 morgan.token("payload", (req, res) => {
-  if (req.method == "POST") return JSON.stringify(req.body);
+  if (req.method === "POST") return JSON.stringify(req.body);
   return "";
 });
 
@@ -21,7 +21,7 @@ app.use(cors());
 app.get("/api/persons", (req, res) => {
   Contact.find({})
     .then((data) => res.json(data))
-    .catch((err) => res.status(500).send({ error: "Error occured" }));
+    .catch(() => res.status(500).send({ error: "Error occured" }));
 });
 
 app.get("/api/info", (req, res) => {
@@ -31,7 +31,7 @@ app.get("/api/info", (req, res) => {
       const date = new Date();
       res.status(200).send(`<p>${info}<p><p>${date}</p>`);
     })
-    .catch((err) => res.status(500));
+    .catch(() => res.status(500));
 });
 
 app.get("/api/info/:id", async (req, res, next) => {
@@ -91,7 +91,7 @@ app.put("/api/info/:id", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-const unknownPoint = (req, res, next) => {
+const unknownPoint = (req, res) => {
   res.status(404).send({ error: "unknown endpoint" });
 };
 
@@ -105,6 +105,7 @@ const errorHandler = (err, req, res, next) => {
   } else if (err.name === "ValidationError") {
     return res.status(400).json({ error: err.message });
   }
+  next(err);
 };
 
 app.use(errorHandler);

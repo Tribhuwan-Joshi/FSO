@@ -60,8 +60,8 @@ const App = () => {
           setMessage(`${res.name} added to contact list`);
           setTimeout(() => setMessage(""), 5000);
         })
-        .catch(() => {
-          setError("Error! Unable to create Contact " + newPerson.name);
+        .catch((err) => {
+          setError(err.response.data.error);
           setTimeout(() => setError(""), 5000);
         });
 
@@ -79,6 +79,7 @@ const App = () => {
       contacts
         .deletePerson(id)
         .then((res) => {
+          console.log(res);
           setPersons(persons.filter((p) => p.id != res.id));
           return res;
         })
