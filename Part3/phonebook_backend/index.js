@@ -47,7 +47,7 @@ app.get("/api/info/:id", async (req, res, next) => {
   }
 });
 
-app.delete("/api/info/:id", (req, res) => {
+app.delete("/api/info/:id", (req, res, next) => {
   Contact.findByIdAndDelete(req.params.id)
     .then((doc) => {
       res.status(200).json(doc);
@@ -55,7 +55,7 @@ app.delete("/api/info/:id", (req, res) => {
     .catch((err) => next(err));
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
   if (!body) return res.status(400).json({ error: "Content is missing" });
   if (!body.name) return res.status(400).json({ error: "name is missing" });
@@ -72,7 +72,7 @@ app.post("/api/persons", (req, res) => {
     .catch((err) => next(err));
 });
 
-app.put("/api/info/:id", (req, res) => {
+app.put("/api/info/:id", (req, res, next) => {
   const body = req.body;
 
   const contact = {
@@ -80,8 +80,14 @@ app.put("/api/info/:id", (req, res) => {
     number: body.number,
   };
 
-  Contact.findByIdAndUpdate(req.params.id, contact, { new: true })
-    .then((doc) => res.json(doc))
+  Contact.findByIdAndUpdate(req.params.id, contact, {
+    new: true,
+    context: "query",
+    runValidators: true,
+  })
+    .then((doc) =>
+      doc ? res.json(doc) : res.status(404).send({ error: "Record not found" })
+    )
     .catch((err) => next(err));
 });
 
@@ -90,6 +96,18 @@ const unknownPoint = (req, res, next) => {
 };
 
 app.use(unknownPoint);
+
+const errorHandler = (err, req, res, next) => {
+  console.error(err.message);
+
+  if (err.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  } else if (err.name === "ValidationError") {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
+app.use(errorHandler);
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`Server starteted at ${PORT}`));
