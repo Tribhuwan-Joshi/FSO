@@ -3,7 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const Contact = require("./models/contact");
 
-morgan.token("payload", (req, res) => {
+morgan.token("payload", (req) => {
   if (req.method === "POST") return JSON.stringify(req.body);
   return "";
 });
