@@ -24,10 +24,10 @@ app.get("/api/notes/:id", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.post("/api/notes", (req, res) => {
+app.post("/api/notes", (req, res, next) => {
   const body = req.body;
 
-  if (body.content == undefined) {
+  if (body.content === undefined) {
     return res.status(400).json({ error: "Content is missing" });
   }
 
@@ -36,9 +36,12 @@ app.post("/api/notes", (req, res) => {
     important: Boolean(body.important) || false,
   });
 
-  note.save().then((savedNote) => {
-    res.json(savedNote);
-  });
+  note
+    .save()
+    .then((savedNote) => {
+      res.json(savedNote);
+    })
+    .catch((err) => next(err));
 });
 
 app.delete("/api/notes/:id", (req, res, next) => {
@@ -58,7 +61,11 @@ app.put("/api/notes/:id", (request, response, next) => {
     important: body.important,
   };
 
-  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+  Note.findByIdAndUpdate(request.params.id, note, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
     .then((updatedNote) => {
       response.json(updatedNote);
     })
@@ -69,12 +76,16 @@ const unknownEndpoint = (req, res) =>
 
 app.use(unknownEndpoint);
 
-// error middleware
-const errorHandler = (err, req, res, next) => {
-  console.error(err);
-  if (err.name == "CastError")
-    return res.status(400).send({ error: "malformatted id" });
-  next(err);
+const errorHandler = (error, request, response, next) => {
+  console.error("full error object", error, "\n");
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
+  }
+
+  next(error);
 };
 
 app.use(errorHandler);
