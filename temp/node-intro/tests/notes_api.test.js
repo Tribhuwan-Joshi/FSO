@@ -9,20 +9,20 @@ const helper = require("./test_helper");
 
 const Note = require("../models/note");
 
-describe("when there is initially some notes saved", () => {
+describe.only("when there is initially some notes saved", () => {
   beforeEach(async () => {
     await Note.deleteMany({});
     await Note.insertMany(helper.initialNotes);
   });
 
-  test("notes are returned as json", async () => {
+  test.only("notes are returned as json", async () => {
     await api
       .get("/api/notes")
       .expect(200)
       .expect("Content-Type", /application\/json/);
   });
 
-  test("all notes are returned", async () => {
+  test.only("all notes are returned", async () => {
     const response = await api.get("/api/notes");
 
     assert.strictEqual(response.body.length, helper.initialNotes.length);

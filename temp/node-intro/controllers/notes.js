@@ -15,10 +15,6 @@ notesRouter.get("/:id", async (req, res) => {
 notesRouter.post("/", async (req, res) => {
   const body = req.body;
 
-  if (body.content === undefined) {
-    return res.status(400).json({ error: "Content is missing" });
-  }
-
   const note = new Note({
     content: body.content,
     important: Boolean(body.important) || false,
