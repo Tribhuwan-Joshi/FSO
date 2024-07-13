@@ -1,4 +1,5 @@
 const express = require("express");
+require("express-async-errors");
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -6,7 +7,7 @@ const config = require("./utils/config");
 const logger = require("./utils/logger");
 const blogsRouter = require("./controllers/blog");
 const middleware = require("./utils/middleware");
-require("express-async-errors");
+
 mongoose
   .connect(config.MONGODB_URI)
   .then(() => logger.info("MongoDB connected"))

@@ -8,7 +8,7 @@ const helper = require("./test_helper");
 
 const api = supertest(app);
 
-describe("when there is initially some blogs saved", () => {
+describe.only("when there is initially some blogs saved", () => {
   // before each clause
   beforeEach(async () => {
     await Blog.deleteMany({});
@@ -67,6 +67,33 @@ describe("when there is initially some blogs saved", () => {
       const blogsInEnd = await helper.blogsInDB();
 
       assert.strictEqual(blogsInEnd.length, helper.intitalBlogs.length);
+    });
+  });
+
+  describe("deletion of a blog", () => {
+    test("that exists succeed with status 204", async () => {
+      const blogsAtStart = await helper.blogsInDB();
+
+      const blogToDelete = blogsAtStart[0];
+
+      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+      const blogsAtEnd = await helper.blogsInDB();
+
+      assert.strictEqual(blogsAtStart.length, blogsAtEnd.length + 1);
+    });
+  });
+
+  describe("updation of a blog", () => {
+    test("succeed if id is valid", async () => {
+      const blogsAtStart = await helper.blogsInDB();
+      const blogToUpdate = blogsAtStart[0];
+      const newBlog = { ...blogToUpdate, likes: blogToUpdate.likes + 1 };
+      const updatedBlog = await api
+        .put(`/api/blogs/${blogToUpdate.id}`)
+        .send(newBlog);
+
+      assert.strictEqual(updatedBlog.body.likes, blogToUpdate.likes + 1);
     });
   });
 });
