@@ -110,8 +110,6 @@ describe.only("when there is initially some notes saved", () => {
       assert(!contents.includes(noteToDelete.content));
     });
   });
-
-  test("note is updated successfully");
 });
 
 after(async () => {
