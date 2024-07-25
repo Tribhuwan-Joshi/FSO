@@ -1,104 +1,219 @@
 const { describe, test, beforeEach, after } = require("node:test");
-const assert = require("node:assert");
-const app = require("../app");
+const assert = require("assert");
 const supertest = require("supertest");
-const mongoose = require("mongoose");
+const app = require("../app");
+const api = supertest(app);
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const User = require("../models/user");
 const Blog = require("../models/blog");
 const helper = require("./test_helper");
+const config = require("../utils/config");
+const { default: mongoose } = require("mongoose");
 
-const api = supertest(app);
+/*
+test for
+- creation - valid - auth is provided, invalid - id is not provided
+- read - valid -> blogs are returned
+- deletion - valid - id match , invalid - id don't match
+- updation - valid - updated blog if valid id, invalid - error returned if invalid
 
-describe.only("when there is initially some blogs saved", () => {
-  // before each clause
+*/
+
+describe("When initial blog is there", () => {
+  let authToken;
   beforeEach(async () => {
+    // create user  and blog
+    await User.deleteMany({});
     await Blog.deleteMany({});
-    await Blog.insertMany(helper.intitalBlogs);
+    const userObj = {
+      username: "root1",
+      name: "root-1",
+    };
+    const passwordHash = await bcrypt.hash("root1", 10);
+    const user = new User({ ...userObj, passwordHash });
+    await user.save();
+    const res = await api
+      .post("/api/login")
+      .send({ username: user.username, password: "root1" });
+
+    authToken = `Bearer ${res.body.token}`;
+    const blog = {
+      title: "test 1",
+      url: "/myblog",
+    };
+    await api.post("/api/blogs").set("authorization", authToken).send(blog);
   });
 
-  test("blogs are returned as json", async () => {
+  test("get request work properly", async () => {
+    const blogsBefore = await Blog.find({});
     await api
       .get("/api/blogs")
       .expect(200)
       .expect("Content-Type", /application\/json/);
-  });
-  test("correct amount of blogs are returned", async () => {
-    const response = await api.get("/api/blogs");
 
-    assert.strictEqual(response.body.length, helper.intitalBlogs.length);
-  });
-  test("Unique identifier id is returned as blog property", async () => {
-    const response = await api.get("/api/blogs");
-    response.body.forEach((blog, index) => {
-      assert(Object.hasOwn(blog, "id"));
-    });
-  });
-  describe("addition of a new blog", () => {
-    test("succeed with valid response", async () => {
-      const newBlog = {
-        title: "How to eat pancakes",
-        url: "xyz",
-        likes: 123,
-      };
-
-      await api
-        .post("/api/blogs")
-        .send(newBlog)
-        .expect(201)
-        .expect("Content-Type", /application\/json/);
-
-      const response = await helper.blogsInDB();
-      assert(response.some((r) => r.title === "How to eat pancakes"));
-      assert.strictEqual(response.length, helper.intitalBlogs.length + 1);
-    });
-    test("set likes to 0 as default", async () => {
-      const newBlog = {
-        title: "Why Peace of Mind is greatest achievement?",
-        url: "xyz",
-      };
-      const response = await api.post("/api/blogs").send(newBlog);
-      assert(response.body.likes === 0);
-    });
-    test("fails with status 400 if data is invalid", async () => {
-      const newBlog = {
-        title: "Why Peace of Mind is greatest achievement?",
-      };
-      await api.post("/api/blogs").send(newBlog).expect(400);
-
-      const blogsInEnd = await helper.blogsInDB();
-
-      assert.strictEqual(blogsInEnd.length, helper.intitalBlogs.length);
-    });
+    const blogsAfter = await Blog.find({});
+    assert(blogsAfter.length === blogsBefore.length);
   });
 
-  describe("deletion of a blog", () => {
-    test("that exists succeed with status 204", async () => {
-      const blogsAtStart = await helper.blogsInDB();
+  test("adding new blog return 401 if auth is not provided", async () => {
+    const newBlog = { title: "test2", url: "/test2" };
+    const beforeBlogs = await helper.blogsInDB();
+    await api.post("/api/blogs").send(newBlog).expect(401);
+    const afterBlogs = await helper.blogsInDB();
 
-      const blogToDelete = blogsAtStart[0];
-
-      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
-
-      const blogsAtEnd = await helper.blogsInDB();
-
-      assert.strictEqual(blogsAtStart.length, blogsAtEnd.length + 1);
-    });
+    assert.strictEqual(beforeBlogs.length, afterBlogs.length);
   });
 
-  describe("updation of a blog", () => {
-    test("succeed if id is valid", async () => {
-      const blogsAtStart = await helper.blogsInDB();
-      const blogToUpdate = blogsAtStart[0];
-      const newBlog = { ...blogToUpdate, likes: blogToUpdate.likes + 1 };
-      const updatedBlog = await api
-        .put(`/api/blogs/${blogToUpdate.id}`)
-        .send(newBlog);
+  test("creating new blog succeed with proper token", async () => {
+    const newBlog = { title: "test2", url: "/test2" };
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .post("/api/blogs")
+      .set("authorization", authToken)
+      .send(newBlog)
+      .expect(201);
+    const afterBlogs = await helper.blogsInDB();
 
-      assert.strictEqual(updatedBlog.body.likes, blogToUpdate.likes + 1);
-    });
+    assert.strictEqual(beforeBlogs.length + 1, afterBlogs.length);
+  });
+
+  test("creation failed with 400 if blog body is missing property", async () => {
+    const newBlog = { url: "/test2" };
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .post("/api/blogs")
+      .set("authorization", authToken)
+      .send(newBlog)
+      .expect(400);
+    const afterBlogs = await helper.blogsInDB();
+
+    assert.strictEqual(beforeBlogs.length, afterBlogs.length);
   });
 });
 
-after(async () => {
+describe.only("deletion of a blog", () => {
+  let authToken;
+  let userId;
+  beforeEach(async () => {
+    await User.deleteMany({});
+    await Blog.deleteMany({});
+    const userObj = {
+      username: "root2",
+      name: "root-2",
+    };
+    const passwordHash = await bcrypt.hash("root2", 10);
+    const user = new User({ ...userObj, passwordHash });
+    await user.save();
+    userId = user._id;
+    const res = await api
+      .post("/api/login")
+      .send({ username: user.username, password: "root2" });
+
+    authToken = `Bearer ${res.body.token}`;
+    const blog = {
+      title: "blog to delete",
+      url: "/myblogdelete",
+    };
+    await api.post("/api/blogs").set("authorization", authToken).send(blog);
+  });
+  test("succeed if the token matches", async () => {
+    const blog = await Blog.find({ user: userId });
+
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .delete(`/api/blogs/${blog[0]._id.toString()}`)
+      .set("authorization", authToken)
+      .expect(204);
+    const afterBlogs = await helper.blogsInDB();
+    assert.strictEqual(afterBlogs.length + 1, beforeBlogs.length);
+  });
+  test("failed with 401 if the token don't matches", async () => {
+    const blog = await Blog.find({ user: userId });
+    const randomUser = new User({ username: "joji" });
+    const invalidAuthToken = await jwt.sign(
+      {
+        username: "joji",
+        id: randomUser._id,
+      },
+      config.SECRET,
+      { expiresIn: 60 * 60 }
+    );
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .delete(`/api/blogs/${blog[0]._id.toString()}`)
+      .set("authorization", `Bearer ${invalidAuthToken}`)
+      .expect(401);
+    const afterBlogs = await helper.blogsInDB();
+    assert.strictEqual(afterBlogs.length, beforeBlogs.length);
+  });
+});
+
+describe("updation of a blog", () => {
+  let authToken;
+  let userId;
+  beforeEach(async () => {
+    await User.deleteMany({});
+    await Blog.deleteMany({});
+    const userObj = {
+      username: "root2",
+      name: "root-2",
+    };
+    const passwordHash = await bcrypt.hash("root2", 10);
+    const user = new User({ ...userObj, passwordHash });
+    await user.save();
+    userId = user._id;
+    const res = await api
+      .post("/api/login")
+      .send({ username: user.username, password: "root2" });
+
+    authToken = `Bearer ${res.body.token}`;
+    const blog = {
+      title: "blog to delete",
+      url: "/myblogdelete",
+    };
+    await api.post("/api/blogs").set("authorization", authToken).send(blog);
+  });
+  test("succeed if the token matches", async () => {
+    const blog = await Blog.find({ user: userId });
+    const updatedBlog = { title: "update title", url: "/updated" };
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .put(`/api/blogs/${blog[0]._id.toString()}`)
+      .set("authorization", authToken)
+      .send(updatedBlog)
+      .expect(200);
+    const afterBlogs = await helper.blogsInDB();
+    assert.strictEqual(afterBlogs.length, beforeBlogs.length);
+    const titles = afterBlogs.map((b) => b.title);
+    assert(titles.includes(updatedBlog.title));
+  });
+  test("failed with 401 if the token don't matches", async () => {
+    const blog = await Blog.find({ user: userId });
+    const updatedBlog = { title: "update title", url: "/updated" };
+    const randomUser = new User({ username: "joji" });
+    const invalidAuthToken = await jwt.sign(
+      {
+        username: "joji",
+        id: randomUser._id,
+      },
+      config.SECRET,
+      { expiresIn: 60 * 60 }
+    );
+    const beforeBlogs = await helper.blogsInDB();
+    await api
+      .delete(`/api/blogs/${blog[0]._id.toString()}`)
+      .set("authorization", `Bearer ${invalidAuthToken}`)
+      .send(updatedBlog)
+      .expect(401);
+    const afterBlogs = await helper.blogsInDB();
+    assert.strictEqual(afterBlogs.length, beforeBlogs.length);
+    const titles = afterBlogs.map((b) => b.title);
+    assert(!titles.includes(updatedBlog.title));
+  });
+});
+
+after(() => {
   mongoose.connection.close();
   console.log("Connection closed");
 });

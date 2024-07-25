@@ -8,6 +8,7 @@ const cors = require("cors");
 const middleware = require("./utils/middleware");
 const mongoose = require("mongoose");
 const userRouter = require("./controllers/users");
+const loginRouter = require("./controllers/login");
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -27,6 +28,7 @@ app.use(express.static("dist"));
 app.get("/", (req, res) => res.send("<h1>Hello World!</h1>"));
 app.use("/api/notes", notesRouter);
 app.use("/api/users", userRouter);
+app.use("/api/login", loginRouter);
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
 
