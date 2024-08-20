@@ -1,9 +1,6 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const config = require("../utils/config");
 require("express-async-errors");
 
 //get token
@@ -41,16 +38,17 @@ blogsRouter.delete("/:id", async (req, res) => {
 });
 
 blogsRouter.put("/:id", async (req, response) => {
-  const blog = await Blog.findById(req.params.id).populate("user");
+  const userId = req.body.user;
+  const user = await User.findById(userId);
+  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+    runValidators: true,
+    new: true,
+    context: "query",
+  });
 
-  if (blog.user._id.toString() == req.user._id) {
-    const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-      runValidators: true,
-      new: true,
-      context: "query",
-    });
-    return response.status(200).json(updatedBlog);
-  } else return response.status(401).json({ error: "Unauthorized to delete" });
+  updatedBlog.user = user;
+
+  return response.status(200).json(updatedBlog);
 });
 
 module.exports = blogsRouter;

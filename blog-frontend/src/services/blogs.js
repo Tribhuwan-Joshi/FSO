@@ -19,4 +19,9 @@ const createPost = async ({ title, author, url }) => {
   return res.data;
 };
 
-export default { getAll, createPost, setToken };
+const incrementLike = async (updatedBlog) => {
+  const res = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog);
+  return res.data;
+};
+
+export default { getAll, createPost, setToken, incrementLike };

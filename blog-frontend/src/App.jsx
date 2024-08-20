@@ -55,6 +55,28 @@ const App = () => {
     }
   };
 
+  const incrementLike = async (blogObject) => {
+    try {
+      const updatedData = {
+        id: blogObject.id,
+        likes: blogObject.likes + 1,
+        user: blogObject.user.id,
+      };
+      const res = await blogService.incrementLike(updatedData);
+      const newBlogs = blogs.map((b) => {
+        if (res.id == b.id) {
+          return res;
+        }
+        return b;
+      });
+      setBlogs(newBlogs);
+    } catch (err) {
+      console.log(err);
+      setError(err.response.data.error);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
   const loginHandler = async ({ username, password }) => {
     try {
       const res = await loginService.loginUser({ username, password });
@@ -118,7 +140,10 @@ const App = () => {
         </Togglable>
       )}
       <h2>blogs</h2>
-      {blogs && blogs.map((blog) => <Blog key={blog.id} blog={blog} />)}
+      {blogs &&
+        blogs.map((blog) => (
+          <Blog key={blog.id} blog={blog} incrementLike={incrementLike} />
+        ))}
     </>
   );
 };
