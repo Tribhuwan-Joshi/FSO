@@ -17,7 +17,10 @@ const App = () => {
   const blogRef = useRef(null);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService.getAll().then((blogs) => {
+      blogs.sort((a, b) => b.likes - a.likes);
+      setBlogs(blogs);
+    });
   }, []);
 
   useEffect(() => {
@@ -55,6 +58,18 @@ const App = () => {
     }
   };
 
+  const deleteBlog = async (blogObject) => {
+    try {
+      await blogService.deleteBlog(blogObject);
+      const updatedBlogs = blogs.filter((b) => b.id != blogObject.id);
+      setBlogs(updatedBlogs);
+    } catch (err) {
+      console.log(err);
+      setError(err.response.data.error);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
   const incrementLike = async (blogObject) => {
     try {
       const updatedData = {
@@ -69,6 +84,7 @@ const App = () => {
         }
         return b;
       });
+      newBlogs.sort((a, b) => b.likes - a.likes);
       setBlogs(newBlogs);
     } catch (err) {
       console.log(err);
@@ -140,9 +156,16 @@ const App = () => {
         </Togglable>
       )}
       <h2>blogs</h2>
+
       {blogs &&
         blogs.map((blog) => (
-          <Blog key={blog.id} blog={blog} incrementLike={incrementLike} />
+          <Blog
+            key={blog.id}
+            blog={blog}
+            deleteBlog={() => deleteBlog(blog)}
+            incrementLike={incrementLike}
+            currentUsername={user?.username}
+          />
         ))}
     </>
   );

@@ -19,9 +19,17 @@ const createPost = async ({ title, author, url }) => {
   return res.data;
 };
 
+const deleteBlog = async (blogObject) => {
+  // also delete it from user
+  const config = { headers: { authorization: token } };
+
+  const res = await axios.delete(`${baseUrl}/${blogObject.id}`, config);
+  return res.data;
+};
+
 const incrementLike = async (updatedBlog) => {
   const res = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog);
   return res.data;
 };
 
-export default { getAll, createPost, setToken, incrementLike };
+export default { getAll, createPost, deleteBlog, setToken, incrementLike };

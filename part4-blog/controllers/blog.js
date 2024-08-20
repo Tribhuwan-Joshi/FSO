@@ -24,6 +24,7 @@ blogsRouter.post("/", async (request, response) => {
 
   const blog = new Blog({ ...request.body, user: currentUser._id });
   currentUser.blogs = currentUser.blogs.concat(blog._id);
+  blog.user = currentUser;
   await currentUser.save();
   await blog.save();
   return response.status(201).json(blog);
@@ -31,6 +32,11 @@ blogsRouter.post("/", async (request, response) => {
 
 blogsRouter.delete("/:id", async (req, res) => {
   const blog = await Blog.findById(req.params.id).populate("user");
+  if (!blog) return res.status(401).json({ error: "blog don't exist" });
+  const user = await User.findById(blog.user._id).populate("blogs");
+
+  const updatedBlogs = user.blogs.filter((blog) => blog._id != req.params.id);
+  user.blogs = updatedBlogs;
   if (blog.user._id.toString() == req.user._id) {
     await blog.deleteOne();
     return res.status(204).end();
