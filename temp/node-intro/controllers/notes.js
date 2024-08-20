@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../utils/config");
 
 const getTokenFrom = (req) => {
-  const authorization = req.get("authorization");
+  const authorization = req.get("Authorization");
   if (authorization && authorization.startsWith("Bearer")) {
     return authorization.replace("Bearer ", "");
   }
