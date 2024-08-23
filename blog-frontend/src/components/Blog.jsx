@@ -29,7 +29,7 @@ const Blog = ({ blog, incrementLike, deleteBlog, currentUsername }) => {
               padding: "4px",
               cursor: "pointer",
             }}
-            onClick={() => deleteBlog()}
+            onClick={deleteBlog}
           >
             Delete
           </button>
