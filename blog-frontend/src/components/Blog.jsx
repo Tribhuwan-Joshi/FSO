@@ -9,20 +9,23 @@ const Blog = ({ blog, incrementLike, deleteBlog, currentUsername }) => {
   };
 
   return (
-    <div style={BlogStyle}>
+    <div className="blogInfo" style={BlogStyle}>
       {blog.title} - {blog.author}
       <button onClick={() => setIsDetail(!isDetail)}>
         {isDetail ? "hide" : "view"}
       </button>
-      <div className="detail" style={{ display: isDetail ? "" : "none" }}>
-        <div>{blog.url}</div>
-        <div>
+      <div className="extraInfo" style={{ display: isDetail ? "" : "none" }}>
+        <div className="url">{blog.url}</div>
+        <div className="likeCount">
           Likes - {blog.likes}
-          <button onClick={() => incrementLike(blog)}>Like</button>
+          <button id="likebtn" onClick={() => incrementLike(blog)}>
+            Like
+          </button>
         </div>
-        <div>Added by {blog.user.name} </div>
+        <div className="addedBy">Added by {blog.user.name} </div>
         {blog.user.username == currentUsername && (
           <button
+            id="deleteBlogBtn"
             style={{
               backgroundColor: "red",
               color: "white",
