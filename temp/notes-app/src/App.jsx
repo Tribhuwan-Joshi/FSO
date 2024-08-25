@@ -71,22 +71,24 @@ const App = () => {
         setNotes(notes.map((note) => (note.id !== id ? note : returnedNote)));
       })
       .catch((error) => {
+        console.log(error);
         setErrorMessage(error.message);
+
         setTimeout(() => {
           setErrorMessage(null);
         }, 5000);
       });
   };
 
-  const deleteNote = (id) => {
-    noteService
-      .remove(id)
-      .then(() => setNotes(notes.filter((n) => n.id != id)))
-      .catch((err) => {
-        console.log("error on delete", err);
-        setErrorMessage(err.message);
-        setTimeout(() => setErrorMessage(null), 5000);
-      });
+  const deleteNote = async (id) => {
+    try {
+      await noteService.remove(id);
+      setNotes(notes.filter((n) => n.id != id));
+    } catch (err) {
+      setNotes(notes.filter((n) => n.id != id));
+      setErrorMessage(err.response.data.error);
+      setTimeout(() => setErrorMessage(null), 5000);
+    }
   };
 
   const notesToShow = showAll ? notes : notes.filter((note) => note.important);

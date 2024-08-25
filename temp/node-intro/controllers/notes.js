@@ -43,6 +43,8 @@ notesRouter.post("/", async (req, res) => {
 });
 
 notesRouter.delete("/:id", async (req, res) => {
+  const note = await Note.findById(req.params.id);
+  if (!note) return res.status(404).json({ error: "blog don't exist" });
   await Note.findByIdAndDelete(req.params.id);
   res.status(204).end();
 });

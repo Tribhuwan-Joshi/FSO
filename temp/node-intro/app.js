@@ -11,6 +11,7 @@ const userRouter = require("./controllers/users");
 const loginRouter = require("./controllers/login");
 
 mongoose.set("strictQuery", false);
+console.log("start connecting...");
 mongoose
   .connect(config.MONGODB_URI)
   .then(() => {
@@ -29,6 +30,10 @@ app.get("/", (req, res) => res.send("<h1>Hello World!</h1>"));
 app.use("/api/notes", notesRouter);
 app.use("/api/users", userRouter);
 app.use("/api/login", loginRouter);
+if (process.env.NODE_ENV === "test") {
+  const testingRouter = require("./controllers/testing");
+  app.use("/api/testing", testingRouter);
+}
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
 
