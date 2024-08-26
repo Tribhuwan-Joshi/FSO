@@ -7,6 +7,7 @@ userRouter.get("/", async (req, res) => {
 });
 
 userRouter.post("/", async (req, res) => {
+  console.log("gonna create user with ", req.body);
   const { username, name, password } = req.body;
   // check if username is unique
 

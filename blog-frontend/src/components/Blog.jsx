@@ -10,14 +10,15 @@ const Blog = ({ blog, incrementLike, deleteBlog, currentUsername }) => {
 
   return (
     <div className="blogInfo" style={BlogStyle}>
-      {blog.title} - {blog.author}
-      <button onClick={() => setIsDetail(!isDetail)}>
+      <span className="blogTitle">{blog.title}</span> -
+      <span className="blogAuthor">{blog.author}</span>
+      <button data-testid="toggleView" onClick={() => setIsDetail(!isDetail)}>
         {isDetail ? "hide" : "view"}
       </button>
       <div className="extraInfo" style={{ display: isDetail ? "" : "none" }}>
         <div className="url">{blog.url}</div>
-        <div className="likeCount">
-          Likes - {blog.likes}
+        <div>
+          Likes - <span className="likeCount">{blog.likes}</span>
           <button id="likebtn" onClick={() => incrementLike(blog)}>
             Like
           </button>

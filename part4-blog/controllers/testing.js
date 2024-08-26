@@ -1,6 +1,6 @@
 const User = require("../models/user");
 const Blog = require("../models/blog");
-const router = require("express").Router();
+const testingRouter = require("express").Router();
 
 testingRouter.post("/reset", async (req, res) => {
   await User.deleteMany({});
@@ -8,4 +8,4 @@ testingRouter.post("/reset", async (req, res) => {
   res.status(204).end();
 });
 
-module.export = router;
+module.exports = testingRouter;

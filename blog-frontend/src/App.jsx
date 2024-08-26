@@ -43,6 +43,13 @@ const App = () => {
   };
 
   const addBlog = async (blogObject) => {
+    if (isTokenExpired(user.token)) {
+      setError("Token expired... logging out!");
+      window.localStorage.removeItem("userInfo");
+      setUser(null);
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
     try {
       const res = await blogService.createPost(blogObject);
       setNotification(
@@ -60,6 +67,7 @@ const App = () => {
 
   const deleteBlog = async (blogObject) => {
     try {
+      if (!window.confirm(`Delete the Blog - ${blogObject.title}`)) return;
       await blogService.deleteBlog(blogObject);
       const updatedBlogs = blogs.filter((b) => b.id != blogObject.id);
       setBlogs(updatedBlogs);
@@ -85,6 +93,7 @@ const App = () => {
         return b;
       });
       newBlogs.sort((a, b) => b.likes - a.likes);
+      console.log("new blogs", newBlogs);
       setBlogs(newBlogs);
     } catch (err) {
       console.log(err);
@@ -116,6 +125,7 @@ const App = () => {
             padding: "1px",
             border: "1px solid red",
           }}
+          className="error"
         >
           Error - {error}
         </h2>
