@@ -1,45 +1,48 @@
 import { createSlice } from "@reduxjs/toolkit";
-
-const anecdotesAtStart = [
-  "If it hurts, do it more often",
-  "Adding manpower to a late software project makes it later!",
-  "The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.",
-  "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
-  "Premature optimization is the root of all evil.",
-  "Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.",
-];
-
-const getId = () => (100000 * Math.random()).toFixed(0);
-
-const asObject = (anecdote) => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0,
-  };
-};
-
-const initialState = anecdotesAtStart.map(asObject);
-
+import anecdoteService from "../services/anecdotes";
 const anecdoteSlice = createSlice({
   name: "anecdotes",
-  initialState,
+  initialState: [],
   reducers: {
     addAnecdotes: (state, action) => {
-      state.push(asObject(action.payload));
+      // if mutate don't return
+      state.push(action.payload);
     },
     vote: (state, action) => {
-      const toChange = state.find((a) => a.id == action.payload);
       return state
-        .map((a) =>
-          a.id === action.payload
-            ? { ...toChange, votes: toChange.votes + 1 }
-            : a
-        )
+        .map((a) => (a.id === action.payload.id ? action.payload : a))
         .sort((a, b) => b.votes - a.votes);
+    },
+    setAnecdotes(state, action) {
+      return action.payload.sort((a, b) => b.votes - a.votes);
     },
   },
 });
 
 export default anecdoteSlice.reducer;
-export const { addAnecdotes, vote } = anecdoteSlice.actions;
+export const { addAnecdotes, vote, setAnecdotes } = anecdoteSlice.actions;
+
+export const initializeAnecdotes = () => {
+  return async (dispatch) => {
+    const anecdotes = await anecdoteService.getAll();
+    dispatch(setAnecdotes(anecdotes));
+  };
+};
+
+export const createAnecdote = (content) => {
+  return async (dispatch) => {
+    const newAnecdote = await anecdoteService.create(content);
+    dispatch(addAnecdotes(newAnecdote));
+  };
+};
+
+export const giveVote = (id) => {
+  return async (dispatch, getState) => {
+    const toUpdate = getState().anecdotes.find((a) => a.id == id);
+    const updatedAnecdote = await anecdoteService.update(toUpdate.id, {
+      ...toUpdate,
+      votes: toUpdate.votes + 1,
+    });
+    dispatch(vote(updatedAnecdote));
+  };
+};
