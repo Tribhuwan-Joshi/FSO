@@ -3,5 +3,6 @@
 **/requests/
 **/.env
 e2e-noteApp
+hook-counter
 
 
