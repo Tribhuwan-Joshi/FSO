@@ -1,22 +1,9 @@
-import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import noteReducer from "./reducers/noteReducer";
-import filterReducer from "./reducers/filterReducer.js";
-import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router } from "react-router-dom";
+import App from "./App";
 
-const store = configureStore({
-  reducer: { notes: noteReducer, filter: filterReducer },
-});
-
-//action creator
-const root = createRoot(document.getElementById("root"));
-
-root.render(
-  <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </StrictMode>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <Router>
+    <App />
+  </Router>
 );
