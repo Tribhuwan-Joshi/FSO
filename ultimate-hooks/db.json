@@ -1,0 +1,59 @@
+{
+  "notes": [
+    {
+      "id": 1,
+      "content": "custom-hooks are awesome!"
+    },
+    {
+      "id": 2,
+      "content": "best feature ever <3"
+    },
+    {
+      "content": "i don't wanna get older",
+      "id": 3
+    },
+    {
+      "content": "joji",
+      "id": 4
+    },
+    {
+      "content": "youu",
+      "id": 5
+    },
+    {
+      "content": "dark",
+      "id": 6
+    },
+    {
+      "content": "planet",
+      "id": 7
+    }
+  ],
+  "persons": [
+    {
+      "id": 1,
+      "name": "mluukkai",
+      "number": "040-5483923"
+    },
+    {
+      "id": 2,
+      "name": "hellas",
+      "number": "012-123123"
+    },
+    {
+      "name": "new ",
+      "number": "1234",
+      "id": 3
+    },
+    {
+      "name": "joji",
+      "number": "1234",
+      "id": 4
+    },
+    {
+      "name": "all ",
+      "number": "ere",
+      "id": 5
+    }
+  ]
+}
