@@ -8,22 +8,22 @@ import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotification } from "./reducers/notification";
+import { initializeBlogs } from "./reducers/blog";
+import { createBlog } from "./reducers/blog";
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const notification = useSelector((state) => state.notification);
+  const blogs = useSelector((state) => state.blogs);
   const dispatch = useDispatch();
 
   const loginRef = useRef(null);
   const blogRef = useRef(null);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => {
-      blogs.sort((a, b) => b.likes - a.likes);
-      setBlogs(blogs);
-    });
+    // initialise all blogs - redux thunk - no need for async keyword inside useEffect
+    dispatch(initializeBlogs());
   }, []);
 
   useEffect(() => {
@@ -54,14 +54,13 @@ const App = () => {
       return;
     }
     try {
-      const res = await blogService.createPost(blogObject);
+      dispatch(createBlog(blogObject));
       dispatch(
         setNotification(
           `New blog added  ${blogObject.title} by ${blogObject.author}`
         )
       );
-      setBlogs(blogs.concat(res));
-      blogRef.current.toggleVisibility();
+      blogRef.current.toggleVisibility(); // hide the blogForm
     } catch (err) {
       console.log(err);
       setError(err.response.data.error);
