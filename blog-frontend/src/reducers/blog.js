@@ -17,10 +17,12 @@ const blogSlice = createSlice({
     },
     likeBlog(state, action) {
       const id = action.payload.id;
-      return state.map((b) => {
-        if (b.id == id) return action.payload;
-        return b;
-      });
+      return state
+        .map((b) => {
+          if (b.id == id) return action.payload;
+          return b;
+        })
+        .sort((a, b) => b.likes - a.likes);
     },
   },
 });
@@ -29,7 +31,7 @@ const blogSlice = createSlice({
 export const initializeBlogs = () => {
   return async (dispatch) => {
     const blogs = await blogService.getAll();
-    dispatch(setBlogs(blogs));
+    dispatch(setBlogs(blogs.sort((a, b) => b.likes - a.likes)));
   };
 };
 
@@ -45,6 +47,13 @@ export const deleteBlogThunk = (blogObject) => {
   return async (dispatch) => {
     await blogService.deleteBlog(blogObject);
     dispatch(removeBlog(blogObject));
+  };
+};
+
+export const likeBlogThunk = (blogObject) => {
+  return async (dispatch) => {
+    const updatedBlog = await blogService.incrementLike(blogObject);
+    dispatch(likeBlog(updatedBlog));
   };
 };
 

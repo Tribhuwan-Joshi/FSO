@@ -8,7 +8,11 @@ import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotification } from "./reducers/notification";
-import { deleteBlogThunk, initializeBlogs } from "./reducers/blog";
+import {
+  deleteBlogThunk,
+  initializeBlogs,
+  likeBlogThunk,
+} from "./reducers/blog";
 import { createBlog } from "./reducers/blog";
 
 const App = () => {
@@ -86,15 +90,7 @@ const App = () => {
         likes: blogObject.likes + 1,
         user: blogObject.user.id,
       };
-      const res = await blogService.incrementLike(updatedData);
-      const newBlogs = blogs.map((b) => {
-        if (res.id == b.id) {
-          return res;
-        }
-        return b;
-      });
-      newBlogs.sort((a, b) => b.likes - a.likes);
-      setBlogs(newBlogs);
+      dispatch(likeBlogThunk(updatedData));
     } catch (err) {
       console.log(err);
       setError(err.response.data.error);
