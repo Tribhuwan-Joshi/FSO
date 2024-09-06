@@ -8,7 +8,7 @@ import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotification } from "./reducers/notification";
-import { initializeBlogs } from "./reducers/blog";
+import { deleteBlogThunk, initializeBlogs } from "./reducers/blog";
 import { createBlog } from "./reducers/blog";
 
 const App = () => {
@@ -71,9 +71,7 @@ const App = () => {
   const deleteBlog = async (blogObject) => {
     try {
       if (!window.confirm(`Delete the Blog - ${blogObject.title}`)) return;
-      await blogService.deleteBlog(blogObject);
-      const updatedBlogs = blogs.filter((b) => b.id != blogObject.id);
-      setBlogs(updatedBlogs);
+      dispatch(deleteBlogThunk(blogObject));
     } catch (err) {
       console.log(err);
       setError(err.response.data.error);
