@@ -12,14 +12,16 @@ import {
   deleteBlogThunk,
   initializeBlogs,
   likeBlogThunk,
+  createBlog,
 } from "./reducers/blog";
-import { createBlog } from "./reducers/blog";
+import { clearUserInfo, getUser, loginUser, setUser } from "./reducers/user";
 
 const App = () => {
-  const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const notification = useSelector((state) => state.notification);
   const blogs = useSelector((state) => state.blogs);
+  const user = useSelector((state) => state.user);
+
   const dispatch = useDispatch();
 
   const loginRef = useRef(null);
@@ -31,14 +33,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
-
-    if (userInfo) {
-      if (!isTokenExpired(userInfo.token)) {
-        setUser(userInfo);
-        blogService.setToken(userInfo.token);
+    dispatch(getUser());
+    if (user) {
+      if (!isTokenExpired(user.token)) {
+        blogService.setToken(user.token);
       } else {
-        window.localStorage.removeItem("userInfo");
+        dispatch(clearUserInfo());
       }
     }
   }, []);
@@ -52,8 +52,7 @@ const App = () => {
   const addBlog = async (blogObject) => {
     if (isTokenExpired(user.token)) {
       setError("Token expired... logging out!");
-      window.localStorage.removeItem("userInfo");
-      setUser(null);
+      dispatch(clearUserInfo());
       setTimeout(() => setError(""), 5000);
       return;
     }
@@ -100,10 +99,8 @@ const App = () => {
 
   const loginHandler = async ({ username, password }) => {
     try {
-      const res = await loginService.loginUser({ username, password });
-      setUser(res.data);
-      localStorage.setItem("userInfo", JSON.stringify(res.data));
-      blogService.setToken(res.data.token);
+      dispatch(loginUser({ username, password }));
+
       loginRef.current.toggleVisibility();
     } catch (err) {
       setError(err.response.data.error);
@@ -131,8 +128,7 @@ const App = () => {
           <h3>Welcome {user.username} </h3>
           <button
             onClick={() => {
-              window.localStorage.removeItem("userInfo");
-              setUser(null);
+              dispatch(clearUserInfo());
             }}
           >
             Log out
