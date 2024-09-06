@@ -6,12 +6,15 @@ import { jwtDecode } from "jwt-decode";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
+import { useDispatch, useSelector } from "react-redux";
+import { setNotification } from "./reducers/notification";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
-  const [notification, setNotification] = useState("");
+  const notification = useSelector((state) => state.notification);
+  const dispatch = useDispatch();
 
   const loginRef = useRef(null);
   const blogRef = useRef(null);
@@ -52,10 +55,11 @@ const App = () => {
     }
     try {
       const res = await blogService.createPost(blogObject);
-      setNotification(
-        `New blog added  ${blogObject.title} by ${blogObject.author}`
+      dispatch(
+        setNotification(
+          `New blog added  ${blogObject.title} by ${blogObject.author}`
+        )
       );
-      setTimeout(() => setNotification(""), 5000);
       setBlogs(blogs.concat(res));
       blogRef.current.toggleVisibility();
     } catch (err) {
@@ -93,7 +97,6 @@ const App = () => {
         return b;
       });
       newBlogs.sort((a, b) => b.likes - a.likes);
-      console.log("new blogs", newBlogs);
       setBlogs(newBlogs);
     } catch (err) {
       console.log(err);
