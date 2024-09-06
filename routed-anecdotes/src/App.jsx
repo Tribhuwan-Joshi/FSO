@@ -4,13 +4,30 @@ import CreateNew from "./components/CreateNew";
 import About from "./components/About";
 import AnecdoteList from "./components/AnecdoteList";
 import Anecdote from "./components/Anecdote";
+import styled from "styled-components";
+
+const Page = styled.div`
+  padding: 1em;
+  background: papayawhip;
+`;
+
+const Navigation = styled.div`
+  background: BurlyWood;
+  padding: 1em;
+`;
+
+const FooterDiv = styled.div`
+  background: Chocolate;
+  padding: 1em;
+  margin-top: 1em;
+`;
 
 const Menu = () => {
   const padding = {
     paddingRight: 5,
   };
   return (
-    <div>
+    <Navigation>
       <Link to="/" style={padding}>
         anecdotes
       </Link>
@@ -20,19 +37,19 @@ const Menu = () => {
       <Link to="/about" style={padding}>
         about
       </Link>
-    </div>
+    </Navigation>
   );
 };
 
 const Footer = () => (
-  <div>
+  <FooterDiv>
     Anecdote app for <a href="https://fullstackopen.com/">Full Stack Open</a>.
     See{" "}
     <a href="https://github.com/fullstack-hy2020/routed-anecdotes/blob/master/src/App.js">
       https://github.com/fullstack-hy2020/routed-anecdotes/blob/master/src/App.js
     </a>{" "}
     for the source code.
-  </div>
+  </FooterDiv>
 );
 
 const App = () => {
@@ -81,7 +98,7 @@ const App = () => {
   };
 
   return (
-    <div>
+    <Page>
       <h1>Software Anecdotes</h1>
       {notification && <div>{notification}</div>}
       <Menu />
@@ -98,7 +115,7 @@ const App = () => {
       </Routes>
 
       <Footer />
-    </div>
+    </Page>
   );
 };
 

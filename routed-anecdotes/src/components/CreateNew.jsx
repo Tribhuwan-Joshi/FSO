@@ -1,5 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useField } from "../hooks";
+import styled from "styled-components";
+
+const Button = styled.button`
+  background: Bisque;
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border: 2px solid Chocolate;
+  border-radius: 3px;
+`;
+const Input = styled.input`
+  margin: 0.25em;
+`;
 
 const CreateNew = (props) => {
   const content = useField("text");
@@ -25,18 +38,18 @@ const CreateNew = (props) => {
       <form onSubmit={handleSubmit}>
         <div>
           content
-          <input {...content} />
+          <Input {...content} />
         </div>
         <div>
           author
-          <input {...author} />
+          <Input {...author} />
         </div>
         <div>
           url for more info
-          <input {...info} />
+          <Input {...info} />
         </div>
-        <button>create</button>
-        <input
+        <Button>create</Button>
+        <Input
           type="button"
           onClick={() => {
             info.onReset();
