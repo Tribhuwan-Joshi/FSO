@@ -57,6 +57,15 @@ const App = () => {
     },
   });
 
+  const deleteBlogMutation = useMutation({
+    mutationFn: (blogObject) => blogService.deleteBlog(blogObject),
+    onSuccess: (_, deletedObject) => {
+      const updatedBlogs = queryClient
+        .getQueryData(["blogs"])
+        .filter((b) => b.id != deletedObject.id);
+      queryClient.setQueryData(["blogs"], updatedBlogs);
+    },
+  });
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
@@ -110,9 +119,7 @@ const App = () => {
   const deleteBlog = async (blogObject) => {
     try {
       if (!window.confirm(`Delete the Blog - ${blogObject.title}`)) return;
-      await blogService.deleteBlog(blogObject);
-      const updatedBlogs = blogs.filter((b) => b.id != blogObject.id);
-      setBlogs(updatedBlogs);
+      deleteBlogMutation.mutate(blogObject);
     } catch (err) {
       console.log(err);
       setError(err.response.data.error);
