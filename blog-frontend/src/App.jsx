@@ -6,22 +6,49 @@ import { jwtDecode } from "jwt-decode";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
+  const queryClient = useQueryClient();
+  const {
+    isPending,
+    error: qErr,
+    data,
+  } = useQuery({
+    queryKey: ["blogs"],
+    queryFn: () =>
+      blogService
+        .getAll()
+        .then((blogs) => blogs.sort((a, b) => b.likes - a.likes)),
+  });
+
+  const newBlogMutation = useMutation({
+    mutationKey: ["blogs"],
+    mutationFn: (blogObject) =>
+      blogService.createPost(blogObject).then((res) => res),
+    onSuccess: (newBlog) => {
+      const blogs = queryClient.getQueryData(["blogs"]);
+      queryClient.setQueryData(["blogs"], blogs.concat(newBlog));
+    },
+  });
+
+  const notificationQuery = useQuery({
+    queryKey: ["notification"],
+    initialData: "",
+  });
+
+  const mutateNotification = useMutation({
+    mutationKey: ["notification"],
+    mutationFn: (notice) => notice,
+    onSuccess: (notice) => {
+      queryClient.setQueryData(["notification"], notice);
+    },
+  });
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
-  const [notification, setNotification] = useState("");
 
   const loginRef = useRef(null);
   const blogRef = useRef(null);
-
-  useEffect(() => {
-    blogService.getAll().then((blogs) => {
-      blogs.sort((a, b) => b.likes - a.likes);
-      setBlogs(blogs);
-    });
-  }, []);
 
   useEffect(() => {
     const userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
@@ -51,12 +78,14 @@ const App = () => {
       return;
     }
     try {
-      const res = await blogService.createPost(blogObject);
-      setNotification(
+      newBlogMutation.mutate(blogObject);
+      // setNotification(
+      //   `New blog added  ${blogObject.title} by ${blogObject.author}`
+      // );
+      mutateNotification.mutate(
         `New blog added  ${blogObject.title} by ${blogObject.author}`
       );
-      setTimeout(() => setNotification(""), 5000);
-      setBlogs(blogs.concat(res));
+      setTimeout(() => mutateNotification.mutate(``), 5000);
       blogRef.current.toggleVisibility();
     } catch (err) {
       console.log(err);
@@ -115,6 +144,8 @@ const App = () => {
     }
   };
 
+  if (isPending) return "Loading...";
+  if (qErr) return "An error occured " + qErr.message;
   return (
     <>
       {error && (
@@ -144,7 +175,7 @@ const App = () => {
           <br />
           <br />
 
-          {notification && (
+          {notificationQuery.data && (
             <h2
               style={{
                 backgroundColor: "green",
@@ -153,7 +184,7 @@ const App = () => {
                 border: "1px solid green",
               }}
             >
-              {notification}
+              {notificationQuery.data}
             </h2>
           )}
           <Togglable ref={blogRef} buttonLabel="Add Blog">
@@ -167,8 +198,8 @@ const App = () => {
       )}
       <h2>blogs</h2>
 
-      {blogs &&
-        blogs.map((blog) => (
+      {data &&
+        data.map((blog) => (
           <Blog
             key={blog.id}
             blog={blog}
