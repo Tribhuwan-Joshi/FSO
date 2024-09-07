@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createContext } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
@@ -7,6 +7,7 @@ import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import UserContext from "./UserContext";
 
 const App = () => {
   const queryClient = useQueryClient();
@@ -66,24 +67,31 @@ const App = () => {
       queryClient.setQueryData(["blogs"], updatedBlogs);
     },
   });
-  const [user, setUser] = useState(null);
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (userInfo && !isTokenExpired(userInfo.token)) {
+        blogService.setToken(userInfo.token);
+      } else localStorage.removeItem("userInfo");
+      return userInfo;
+    },
+  });
+
+  const userMutation = useMutation({
+    mutationFn: (user) => {
+      if (!user) localStorage.removeItem("userInfo");
+      else localStorage.setItem("userInfo", JSON.stringify(user));
+      return user;
+    },
+    onSuccess: (user) => queryClient.setQueryData(["user"], user),
+  });
+
   const [error, setError] = useState("");
 
   const loginRef = useRef(null);
   const blogRef = useRef(null);
-
-  useEffect(() => {
-    const userInfo = JSON.parse(window.localStorage.getItem("userInfo"));
-
-    if (userInfo) {
-      if (!isTokenExpired(userInfo.token)) {
-        setUser(userInfo);
-        blogService.setToken(userInfo.token);
-      } else {
-        window.localStorage.removeItem("userInfo");
-      }
-    }
-  }, []);
 
   const isTokenExpired = (token) => {
     const decodedToken = jwtDecode(token);
@@ -94,8 +102,7 @@ const App = () => {
   const addBlog = async (blogObject) => {
     if (isTokenExpired(user.token)) {
       setError("Token expired... logging out!");
-      window.localStorage.removeItem("userInfo");
-      setUser(null);
+      userMutation.mutate(null);
       setTimeout(() => setError(""), 5000);
       return;
     }
@@ -145,8 +152,8 @@ const App = () => {
   const loginHandler = async ({ username, password }) => {
     try {
       const res = await loginService.loginUser({ username, password });
-      setUser(res.data);
-      localStorage.setItem("userInfo", JSON.stringify(res.data));
+      userMutation.mutate(res.data);
+
       blogService.setToken(res.data.token);
       loginRef.current.toggleVisibility();
     } catch (err) {
@@ -157,8 +164,9 @@ const App = () => {
 
   if (isPending) return "Loading...";
   if (qErr) return "An error occured " + qErr.message;
+
   return (
-    <>
+    <UserContext.Provider value={user}>
       {error && (
         <h2
           style={{
@@ -177,8 +185,7 @@ const App = () => {
           <h3>Welcome {user.username} </h3>
           <button
             onClick={() => {
-              window.localStorage.removeItem("userInfo");
-              setUser(null);
+              userMutation.mutate(null);
             }}
           >
             Log out
@@ -216,10 +223,9 @@ const App = () => {
             blog={blog}
             deleteBlog={() => deleteBlog(blog)}
             incrementLike={incrementLike}
-            currentUsername={user?.username}
           />
         ))}
-    </>
+    </UserContext.Provider>
   );
 };
 

@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
-const Blog = ({ blog, incrementLike, deleteBlog, currentUsername }) => {
+import UserContext from "../UserContext";
+const Blog = ({ blog, incrementLike, deleteBlog }) => {
   const [isDetail, setIsDetail] = useState(false);
   const BlogStyle = {
     border: "2px solid black",
     padding: "5px",
     margin: "6px 0px",
   };
+  const user = useContext(UserContext);
 
+  const currentUsername = user ? user.username : null;
   return (
     <div className="blogInfo" style={BlogStyle}>
       <span className="blogTitle">{blog.title}</span> -
