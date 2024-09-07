@@ -20,12 +20,14 @@ const App = () => {
       blogService
         .getAll()
         .then((blogs) => blogs.sort((a, b) => b.likes - a.likes)),
+    refetchOnWindowFocus: false,
   });
 
   const newBlogMutation = useMutation({
     mutationKey: ["blogs"],
     mutationFn: (blogObject) =>
       blogService.createPost(blogObject).then((res) => res),
+
     onSuccess: (newBlog) => {
       const blogs = queryClient.getQueryData(["blogs"]);
       queryClient.setQueryData(["blogs"], blogs.concat(newBlog));
@@ -38,12 +40,23 @@ const App = () => {
   });
 
   const mutateNotification = useMutation({
-    mutationKey: ["notification"],
     mutationFn: (notice) => notice,
     onSuccess: (notice) => {
       queryClient.setQueryData(["notification"], notice);
     },
   });
+
+  const likeMutation = useMutation({
+    mutationFn: (updatedBlog) => blogService.incrementLike(updatedBlog),
+    onSuccess: (updatedBlog) => {
+      const blogs = queryClient.getQueryData(["blogs"]);
+      const updatedBlogs = blogs
+        .map((b) => (b.id == updatedBlog.id ? updatedBlog : b))
+        .sort((a, b) => b.likes - a.likes);
+      queryClient.setQueryData(["blogs"], updatedBlogs);
+    },
+  });
+
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
@@ -114,16 +127,7 @@ const App = () => {
         likes: blogObject.likes + 1,
         user: blogObject.user.id,
       };
-      const res = await blogService.incrementLike(updatedData);
-      const newBlogs = blogs.map((b) => {
-        if (res.id == b.id) {
-          return res;
-        }
-        return b;
-      });
-      newBlogs.sort((a, b) => b.likes - a.likes);
-      console.log("new blogs", newBlogs);
-      setBlogs(newBlogs);
+      likeMutation.mutate(updatedData);
     } catch (err) {
       console.log(err);
       setError(err.response.data.error);
