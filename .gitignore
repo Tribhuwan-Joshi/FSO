@@ -4,6 +4,11 @@
 **/.env
 e2e-noteApp
 hook-counter
+<<<<<<< HEAD
 test-code
 notes.txt
 webpack
+=======
+
+
+>>>>>>> 6471985bd0c1106165c37812feb29dba9405b90a

@@ -21,7 +21,11 @@ const userExtractor = async (req, res, next) => {
       else req.user = user;
     }
   } else {
+<<<<<<< HEAD
     req.user = null;
+=======
+    res.user = null;
+>>>>>>> 6471985bd0c1106165c37812feb29dba9405b90a
   }
   next();
 };

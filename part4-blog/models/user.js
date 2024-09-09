@@ -20,7 +20,11 @@ const userSchema = mongoose.Schema({
 // when matching user password, directly query from DB
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
+<<<<<<< HEAD
     ret.id = ret._id?.toString();
+=======
+    ret.id = ret._id.toString();
+>>>>>>> 6471985bd0c1106165c37812feb29dba9405b90a
     delete ret._id;
     delete ret._v;
     delete ret.passwordHash;
