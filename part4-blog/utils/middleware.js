@@ -21,7 +21,7 @@ const userExtractor = async (req, res, next) => {
       else req.user = user;
     }
   } else {
-    res.user = null;
+    req.user = null;
   }
   next();
 };

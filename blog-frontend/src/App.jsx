@@ -1,26 +1,42 @@
 import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
+import User from "./components/User";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import userService from "./services/users";
 import { jwtDecode } from "jwt-decode";
 import LoginForm from "./components/LoginForm";
-import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
+import { Navigate, NavLink, Route, Routes, useMatch } from "react-router-dom";
+import BlogList from "./components/BlogList";
+import UserList from "./components/UserList";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const [notification, setNotification] = useState("");
+  const [users, setUsers] = useState([]);
+  const blogMatch = useMatch("/blogs/:id");
+  const userMatch = useMatch("/users/:id");
 
+  const routeUser = userMatch
+    ? users.find((u) => u.id === String(userMatch.params.id))
+    : null;
+  const routeBlog = blogMatch
+    ? blogs.find((b) => b.id === String(blogMatch.params.id))
+    : null;
   const loginRef = useRef(null);
   const blogRef = useRef(null);
+
+  console.log(routeBlog);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
       blogs.sort((a, b) => b.likes - a.likes);
       setBlogs(blogs);
     });
+    userService.getAll().then((allUsers) => setUsers(allUsers));
   }, []);
 
   useEffect(() => {
@@ -29,6 +45,7 @@ const App = () => {
     if (userInfo) {
       if (!isTokenExpired(userInfo.token)) {
         setUser(userInfo);
+        console.log(userInfo, "ye he");
         blogService.setToken(userInfo.token);
       } else {
         window.localStorage.removeItem("userInfo");
@@ -39,6 +56,7 @@ const App = () => {
   const isTokenExpired = (token) => {
     const decodedToken = jwtDecode(token);
     const currentTime = Date.now() / 1000;
+
     return decodedToken.exp < currentTime;
   };
 
@@ -60,6 +78,15 @@ const App = () => {
       blogRef.current.toggleVisibility();
     } catch (err) {
       console.log(err);
+      setError(err.response.data.error);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+  const addComment = async (blogId, comment) => {
+    try {
+      const updatedBlog = await blogService.addComment({ blogId, comment });
+      setBlogs(blogs.map((b) => (b.id === blogId ? updatedBlog : b)));
+    } catch (err) {
       setError(err.response.data.error);
       setTimeout(() => setError(""), 5000);
     }
@@ -93,7 +120,6 @@ const App = () => {
         return b;
       });
       newBlogs.sort((a, b) => b.likes - a.likes);
-      console.log("new blogs", newBlogs);
       setBlogs(newBlogs);
     } catch (err) {
       console.log(err);
@@ -117,6 +143,29 @@ const App = () => {
 
   return (
     <>
+      <h3>Blog App</h3>
+      <div>
+        <NavLink
+          style={(isActive) =>
+            isActive
+              ? { margin: "4px" }
+              : { margin: "4px", textDecoration: "none" }
+          }
+          to="/"
+        >
+          blogs
+        </NavLink>
+        <NavLink
+          style={(isActive) =>
+            isActive
+              ? { margin: "4px" }
+              : { margin: "4px", textDecoration: "none" }
+          }
+          to="/users"
+        >
+          users
+        </NavLink>
+      </div>
       {error && (
         <h2
           style={{
@@ -156,27 +205,40 @@ const App = () => {
               {notification}
             </h2>
           )}
-          <Togglable ref={blogRef} buttonLabel="Add Blog">
-            <BlogForm addBlog={addBlog} />
-          </Togglable>
         </div>
       ) : (
         <Togglable ref={loginRef} buttonLabel="log in">
           <LoginForm handleSubmit={loginHandler} />
         </Togglable>
       )}
-      <h2>blogs</h2>
-
-      {blogs &&
-        blogs.map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            deleteBlog={() => deleteBlog(blog)}
-            incrementLike={incrementLike}
-            currentUsername={user?.username}
-          />
-        ))}
+      <Routes>
+        <Route
+          path="/blogs/:id"
+          element={
+            <Blog
+              blog={routeBlog}
+              incrementLike={incrementLike}
+              currentUser={user || null}
+              deleteBlog={deleteBlog}
+              addComment={addComment}
+            />
+          }
+        />
+        <Route path="/users/:id" element={<User user={routeUser} />} />
+        <Route path="/users" element={<UserList users={users} />} />
+        <Route path="/*" element={<Navigate to="/" />} />
+        <Route
+          path="/"
+          element={
+            <BlogList
+              user={user}
+              blogRef={blogRef}
+              blogs={blogs}
+              addBlog={addBlog}
+            />
+          }
+        />
+      </Routes>
     </>
   );
 };

@@ -1,53 +1,93 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-const Blog = ({ blog, incrementLike, deleteBlog, currentUsername }) => {
-  const [isDetail, setIsDetail] = useState(false);
-  const BlogStyle = {
-    border: "2px solid black",
-    padding: "5px",
-    margin: "6px 0px",
+import { Link, useNavigate } from "react-router-dom";
+import blogService from "../services/blogs";
+import { v4 as uuid } from "uuid";
+import { useEffect, useState } from "react";
+
+const Blog = ({
+  blog: initialBlog,
+  incrementLike,
+  deleteBlog,
+  currentUser,
+  addComment,
+}) => {
+  const navigate = useNavigate();
+  const [blog, setBlog] = useState(initialBlog);
+
+  useEffect(() => {
+    setBlog(initialBlog);
+  }, [initialBlog]);
+  const handleDelete = async () => {
+    try {
+      await deleteBlog(blog);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+
+    const commentInput = e.target.comment;
+
+    // Check if the comment is empty
+    if (!commentInput.value.trim()) {
+      commentInput.setCustomValidity("Comment cannot be empty!");
+      commentInput.reportValidity();
+      return;
+    } else {
+      commentInput.setCustomValidity(""); // Clear the error if the input is valid
+    }
+    try {
+      await addComment(blog?.id, commentInput.value);
+      commentInput.value = "";
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (!blog) return null;
+
   return (
-    <div className="blogInfo" style={BlogStyle}>
-      <span className="blogTitle">{blog.title}</span> -
-      <span className="blogAuthor">{blog.author}</span>
-      <button data-testid="toggleView" onClick={() => setIsDetail(!isDetail)}>
-        {isDetail ? "hide" : "view"}
-      </button>
-      <div className="extraInfo" style={{ display: isDetail ? "" : "none" }}>
-        <div className="url">{blog.url}</div>
-        <div>
-          Likes - <span className="likeCount">{blog.likes}</span>
-          <button id="likebtn" onClick={() => incrementLike(blog)}>
-            Like
-          </button>
+    <>
+      <h2>{blog.title}</h2>
+      <div>
+        For more info- <a href={blog.url}>{blog.url}</a>
+      </div>
+      <div>
+        {blog.likes} likes{" "}
+        <button onClick={() => incrementLike(blog)}>Like</button>
+      </div>
+      {currentUser?.username === blog.user.username && (
+        <button
+          onClick={handleDelete}
+          style={{ backgroundColor: "red", color: "white" }}
+        >
+          Delete
+        </button>
+      )}
+      <div>
+        Added by <Link to={`/users/${blog.user.id}`}>{blog.user.username}</Link>
+      </div>
+
+      {currentUser && (
+        <div style={{ margin: "10px 0px" }}>
+          <form onSubmit={handleCommentSubmit}>
+            <input type="text" placeholder="your comment..." name="comment" />
+            <button>add</button>
+          </form>
         </div>
-        <div className="addedBy">Added by {blog.user.name} </div>
-        {blog.user.username == currentUsername && (
-          <button
-            id="deleteBlogBtn"
-            style={{
-              backgroundColor: "red",
-              color: "white",
-              padding: "4px",
-              cursor: "pointer",
-            }}
-            onClick={deleteBlog}
-          >
-            Delete
-          </button>
+      )}
+      <div>
+        <h4 style={{ textDecoration: "underline" }}>Comments</h4>
+        {blog.comments ? (
+          blog.comments.map((c) => <div key={uuid()}>{c.content}</div>)
+        ) : (
+          <></>
         )}
       </div>
-    </div>
+    </>
   );
-};
-
-Blog.propTypes = {
-  blog: PropTypes.object.isRequired,
-  incrementLike: PropTypes.func.isRequired,
-  currentUsername: PropTypes.string,
-  deleteBlog: PropTypes.func,
 };
 
 export default Blog;

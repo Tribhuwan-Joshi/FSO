@@ -1,0 +1,14 @@
+components
+- userlist
+- bloglist
+- user/:id
+- blog/:id
+
+routes
+- /users
+- /users/:id
+- / - blogs 
+- /blogs/:id 
+
+- Add blogsCount field - u.blogsCount
+- blog.user.username

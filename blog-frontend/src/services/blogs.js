@@ -27,9 +27,22 @@ const deleteBlog = async (blogObject) => {
   return res.data;
 };
 
+const addComment = async ({ comment, blogId }) => {
+  const config = { headers: { authorization: token } };
+  const res = await axios.post(`${baseUrl}/${blogId}`, { comment }, config);
+  return res.data;
+};
+
 const incrementLike = async (updatedBlog) => {
   const res = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog);
   return res.data;
 };
 
-export default { getAll, createPost, deleteBlog, setToken, incrementLike };
+export default {
+  getAll,
+  createPost,
+  deleteBlog,
+  setToken,
+  incrementLike,
+  addComment,
+};

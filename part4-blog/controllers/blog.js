@@ -6,12 +6,31 @@ require("express-async-errors");
 //get token
 
 blogsRouter.get("/", async (request, response) => {
-  const blogs = await Blog.find({}).populate("user", {
-    username: 1,
-    name: 1,
-    id: 1,
-  });
+  const blogs = await Blog.find({})
+    .populate("user", {
+      username: 1,
+      name: 1,
+      id: 1,
+    })
+    .populate("comments.user", { username: 1, name: 1, id: 1 });
   return response.status(200).json(blogs);
+});
+
+// post comment on specific blog
+
+blogsRouter.post("/:id", async (req, res) => {
+  const blogId = req.params.id;
+
+  const comment = { content: req.body.comment, user: req.user.id };
+  console.log("comment is ", comment);
+  if (!comment)
+    return res.status(400).json({ error: "Comment must be of length 1" });
+  const blog = await Blog.findById(blogId);
+  if (!blog) return res.status(404).json({ error: "Blog not found" });
+
+  blog.comments.push(comment);
+  await blog.save();
+  return res.status(201).json(blog);
 });
 
 blogsRouter.post("/", async (request, response) => {
