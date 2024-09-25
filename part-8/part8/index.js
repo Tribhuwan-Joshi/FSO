@@ -1,7 +1,7 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const { v1: uuid } = require("uuid");
-
+const { GraphQLError } = require("graphql");
 let authors = [
   {
     name: "Robert Martin",
@@ -158,7 +158,10 @@ const resolvers = {
     },
     editAuthor: (root, args) => {
       const authorExist = authors.find((a) => a.name == args.name);
-      if (!authorExist) return null;
+      if (!authorExist) {
+        return null;
+      }
+
       authorExist.born = args.setBornTo;
       authors = authors.map((a) => (a.id == authorExist.id ? authorExist : a));
       return authorExist;
