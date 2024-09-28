@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client";
 import { FIND_PERSON } from "../queries";
 
 const Person = ({ person, onClose }) => {
+  console.log("rendering person");
   return (
     <div>
       <h2>{person.name}</h2>
