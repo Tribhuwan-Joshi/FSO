@@ -21,6 +21,9 @@ const blogSchema = new mongoose.Schema({
       },
     },
   ],
+  thumbnail: {
+    type: String, // This will store the URL or path of the image
+  },
 });
 
 blogSchema.set("toJSON", {

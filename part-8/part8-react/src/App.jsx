@@ -1,18 +1,26 @@
 /* eslint-disable react/prop-types */
-import { useQuery } from "@apollo/client";
+import { useApolloClient, useQuery } from "@apollo/client";
 import Persons from "./components/Persons";
 import { ALL_PERSONS } from "./queries";
 import PersonForm from "./components/PersonForm";
 import { useState } from "react";
 import PhoneForm from "./components/PhoneForm";
+import LoginForm from "./components/LoginForm";
 
 const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
-  const result = useQuery(ALL_PERSONS);
+  const [token, setToken] = useState(null);
 
+  const result = useQuery(ALL_PERSONS);
+  const client = useApolloClient();
   if (result.loading) {
     return <div>loading...</div>;
   }
+  const logout = () => {
+    setToken(null);
+    localStorage.clear();
+    client.resetStore();
+  };
   const notify = (message) => {
     setErrorMessage(message);
     setTimeout(() => {
@@ -20,6 +28,15 @@ const App = () => {
     }, 10000);
   };
 
+  if (!token) {
+    return (
+      <div>
+        <Notify errorMessage={errorMessage} />
+        <h2>Login</h2>
+        <LoginForm setToken={setToken} setError={notify} />
+      </div>
+    );
+  }
   return (
     <div>
       <Notify errorMessage={errorMessage} />
