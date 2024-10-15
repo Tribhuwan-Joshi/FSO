@@ -29,8 +29,6 @@ const App = () => {
   const loginRef = useRef(null);
   const blogRef = useRef(null);
 
-  console.log(routeBlog);
-
   useEffect(() => {
     blogService.getAll().then((blogs) => {
       blogs.sort((a, b) => b.likes - a.likes);
