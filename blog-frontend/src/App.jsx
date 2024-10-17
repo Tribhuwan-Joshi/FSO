@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import User from "./components/User";
-import blogService from "./services/blogs";
+import blogService from "../../e2e-noteApp/blogs";
 import loginService from "./services/login";
 import userService from "./services/users";
 import { jwtDecode } from "jwt-decode";
@@ -10,6 +10,7 @@ import Togglable from "./components/Togglable";
 import { Navigate, NavLink, Route, Routes, useMatch } from "react-router-dom";
 import BlogList from "./components/BlogList";
 import UserList from "./components/UserList";
+import SignupForm from "./components/signupForm";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -27,6 +28,8 @@ const App = () => {
     ? blogs.find((b) => b.id === String(blogMatch.params.id))
     : null;
   const loginRef = useRef(null);
+  const signupRef = useRef(null);
+
   const blogRef = useRef(null);
 
   useEffect(() => {
@@ -43,7 +46,6 @@ const App = () => {
     if (userInfo) {
       if (!isTokenExpired(userInfo.token)) {
         setUser(userInfo);
-        console.log(userInfo, "ye he");
         blogService.setToken(userInfo.token);
       } else {
         window.localStorage.removeItem("userInfo");
@@ -137,6 +139,18 @@ const App = () => {
       setTimeout(() => setError(""), 5000);
     }
   };
+  const signupHandler = async ({ username, name, password }) => {
+    try {
+      const res = await userService.signup({ username, name, password });
+      setUser(res.data);
+      localStorage.setItem("userInfo", JSON.stringify(res.data));
+      blogService.setToken(res.data.token);
+      signupRef.current.toggleVisibility();
+    } catch (err) {
+      setError(err.response.data.error);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
 
   return (
     <>
@@ -204,9 +218,14 @@ const App = () => {
           )}
         </div>
       ) : (
-        <Togglable ref={loginRef} buttonLabel="log in">
-          <LoginForm handleSubmit={loginHandler} />
-        </Togglable>
+        <div>
+          <Togglable ref={loginRef} buttonLabel="log in">
+            <LoginForm handleSubmit={loginHandler} />
+          </Togglable>
+          <Togglable ref={signupRef} buttonLabel="sign up">
+            <SignupForm handleSubmit={signupHandler} />
+          </Togglable>
+        </div>
       )}
       <Routes>
         <Route

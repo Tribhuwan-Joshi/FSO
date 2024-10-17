@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import blogService from "../services/blogs";
+import blogService from "../../../e2e-noteApp/blogs";
 import { v4 as uuid } from "uuid";
 import { useEffect, useState } from "react";
 

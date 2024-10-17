@@ -6,4 +6,9 @@ const getAll = () => {
   return request.then((response) => response.data);
 };
 
-export default { getAll };
+const signup = async ({ username, name, password }) => {
+  const res = await axios.post(baseUrl, { username, name, password });
+  return res;
+};
+
+export default { getAll, signup };
