@@ -21,7 +21,6 @@ const App = () => {
   const blogMatch = useMatch("/blogs/:id");
   const userMatch = useMatch("/users/:id");
 
-  console.log("current user", user);
   const routeUser = userMatch
     ? users.find((u) => u.id === String(userMatch.params.id))
     : null;

@@ -6,7 +6,7 @@ const User = ({ user }) => {
   return (
     <>
       <h2>{user.username}</h2>
-
+      <h4>Full name - {user.name}</h4>
       <h3>added blogs</h3>
       <ul>
         {user.blogs.length == 0
