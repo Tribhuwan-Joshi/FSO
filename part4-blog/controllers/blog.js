@@ -23,9 +23,9 @@ blogsRouter.post("/:id", async (req, res) => {
 
   const comment = { content: req.body.comment, user: req.user.id };
   console.log("comment is ", comment);
-  if (!comment)
+  if (!comment.content)
     return res.status(400).json({ error: "Comment must be of length 1" });
-  const blog = await Blog.findById(blogId);
+  const blog = await Blog.findById(blogId).populate("user");
   if (!blog) return res.status(404).json({ error: "Blog not found" });
 
   blog.comments.push(comment);
@@ -63,15 +63,11 @@ blogsRouter.delete("/:id", async (req, res) => {
 });
 
 blogsRouter.put("/:id", async (req, response) => {
-  const userId = req.body.user;
-  const user = await User.findById(userId);
   const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
     runValidators: true,
     new: true,
     context: "query",
-  });
-
-  updatedBlog.user = user;
+  }).populate("user");
 
   return response.status(200).json(updatedBlog);
 });

@@ -3,12 +3,11 @@ const BlogForm = ({ addBlog }) => {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
-  const [author, setAuthor] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addBlog({ title, author, url, description });
-    setAuthor("");
+    addBlog({ title, url, description });
+
     setDescription("");
     setTitle("");
     setUrl("");
@@ -35,14 +34,7 @@ const BlogForm = ({ addBlog }) => {
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div>
-        Author
-        <input
-          id="author"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        />
-      </div>
+
       <div>
         Url
         <input

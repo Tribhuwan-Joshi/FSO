@@ -18,6 +18,7 @@ const Blog = ({
   }, [initialBlog]);
   const handleDelete = async () => {
     try {
+      if (!window.confirm(`Delete the Blog - ${blog.title}`)) return;
       await deleteBlog(blog);
       navigate("/");
     } catch (err) {
@@ -47,6 +48,7 @@ const Blog = ({
   };
 
   if (!blog) return null;
+  console.log("current blog", blog, typeof blog.id);
 
   return (
     <>

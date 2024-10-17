@@ -16,6 +16,7 @@ const LoginForm = ({ handleSubmit }) => {
         <div>
           username
           <input
+            required
             placeholder="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -24,6 +25,7 @@ const LoginForm = ({ handleSubmit }) => {
         <div>
           password
           <input
+            required
             placeholder="password"
             type="password"
             value={password}

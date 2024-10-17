@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import User from "./components/User";
-import blogService from "../../e2e-noteApp/blogs";
+import blogService from "./services/blogs";
 import loginService from "./services/login";
 import userService from "./services/users";
 import { jwtDecode } from "jwt-decode";
@@ -21,6 +21,7 @@ const App = () => {
   const blogMatch = useMatch("/blogs/:id");
   const userMatch = useMatch("/users/:id");
 
+  console.log("current user", user);
   const routeUser = userMatch
     ? users.find((u) => u.id === String(userMatch.params.id))
     : null;
@@ -75,9 +76,7 @@ const App = () => {
     }
     try {
       const res = await blogService.createPost(blogObject);
-      setNotification(
-        `New blog added  ${blogObject.title} by ${blogObject.author}`
-      );
+      setNotification(`New blog added  ${blogObject.title}`);
       setTimeout(() => setNotification(""), 5000);
       setBlogs(blogs.concat(res));
       blogRef.current.toggleVisibility();
@@ -99,7 +98,6 @@ const App = () => {
 
   const deleteBlog = async (blogObject) => {
     try {
-      if (!window.confirm(`Delete the Blog - ${blogObject.title}`)) return;
       await blogService.deleteBlog(blogObject);
       const updatedBlogs = blogs.filter((b) => b.id != blogObject.id);
       setBlogs(updatedBlogs);
@@ -115,7 +113,6 @@ const App = () => {
       const updatedData = {
         id: blogObject.id,
         likes: blogObject.likes + 1,
-        user: blogObject.user.id,
       };
       const res = await blogService.incrementLike(updatedData);
       const newBlogs = blogs.map((b) => {

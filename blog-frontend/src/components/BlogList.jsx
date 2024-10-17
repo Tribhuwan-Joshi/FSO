@@ -33,13 +33,13 @@ const BlogList = ({ blogs, addBlog, blogRef, user }) => {
             <tr
               key={b.id}
               style={{
-                backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
+                backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#87CEEB",
                 border: "1px solid black",
               }}
             >
               <td style={{ padding: "8px" }}>{b.title}</td>
               <td style={{ padding: "8px" }}>
-                <Link to={`/users/${b.user.id}`}>{b.author}</Link>
+                <Link to={`/users/${b.user.id}`}>{b.user.username}</Link>
               </td>
               <td style={{ padding: "8px" }}>{b.formattedDate}</td>
               <td style={{ padding: "8px" }}>{b.likes}</td>
