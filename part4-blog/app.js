@@ -18,6 +18,7 @@ mongoose
   });
 
 app.use(cors());
+app.use(express.static("dist"));
 app.use(express.json());
 app.use("/api/blogs", middleware.userExtractor, blogsRouter);
 app.use("/api/users", usersRouter);
