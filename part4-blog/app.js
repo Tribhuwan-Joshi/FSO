@@ -1,5 +1,8 @@
 const express = require("express");
 require("express-async-errors");
+const { rateLimit } = require("express-rate-limit");
+const { slowDown } = require("express-slow-down");
+const path = require("path");
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -17,6 +20,20 @@ mongoose
     logger.error("error connecting to MongoDB:", error.message);
   });
 
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   limit: 1,
+//   standardHeaders: "draft-7",
+//   legacyHeaders: false,
+// });
+
+// app.use(limiter);
+// const speedLimiter = slowDown({
+//   windowMs: 15 * 60 * 1000,
+//   delayAfter: 1,
+//   delayMs: () => 2000,
+// });
+// app.use(speedLimiter);
 app.use(cors());
 app.use(express.static("dist"));
 app.use(express.json());
@@ -27,6 +44,9 @@ if (process.env.NODE_ENV === "test") {
   const testingRouter = require("./controllers/testing");
   app.use("/api/testing", testingRouter);
 }
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "dist", "index.html"));
+});
 app.use(middleware.unknownEndPoint);
 app.use(middleware.errorHandler);
 
