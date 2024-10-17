@@ -33,10 +33,16 @@ const App = () => {
   const blogRef = useRef(null);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => {
-      blogs.sort((a, b) => b.likes - a.likes);
-      setBlogs(blogs);
-    });
+    blogService
+      .getAll()
+      .then((blogs) => {
+        blogs.sort((a, b) => b.likes - a.likes);
+        setBlogs(blogs);
+      })
+      .catch((err) => {
+        setError("Unexpected error occur! try again later");
+        setTimeout(() => setError(""), 5000);
+      });
     userService.getAll().then((allUsers) => setUsers(allUsers));
   }, []);
 

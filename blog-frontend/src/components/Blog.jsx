@@ -50,11 +50,16 @@ const Blog = ({
 
   return (
     <>
-      <h2>{blog.title}</h2>
+      <h2>{blog.title.toUpperCase()}</h2>
+      <h4 style={{ margin: "5px 0px" }}>
+        Added by <Link to={`/users/${blog.user.id}`}>{blog.user.username}</Link>
+      </h4>
+      <h4>Created at - {blog.formattedDate}</h4>
+      <p>{blog.description}</p>
       <div>
         For more info- <a href={blog.url}>{blog.url}</a>
       </div>
-      <div>
+      <div style={{ margin: "5px 0px" }}>
         {blog.likes} likes{" "}
         <button onClick={() => incrementLike(blog)}>Like</button>
       </div>
@@ -66,9 +71,6 @@ const Blog = ({
           Delete
         </button>
       )}
-      <div>
-        Added by <Link to={`/users/${blog.user.id}`}>{blog.user.username}</Link>
-      </div>
 
       {currentUser && (
         <div style={{ margin: "10px 0px" }}>
@@ -78,8 +80,10 @@ const Blog = ({
           </form>
         </div>
       )}
-      <div>
-        <h4 style={{ textDecoration: "underline" }}>Comments</h4>
+      <div style={{ margin: "5px 0px" }}>
+        <h4 style={{ textDecoration: "underline" }}>
+          Comments - {blog.comments.length}
+        </h4>
         {blog.comments ? (
           blog.comments.map((c) => <div key={uuid()}>{c.content}</div>)
         ) : (
